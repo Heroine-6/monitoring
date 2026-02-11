@@ -2,6 +2,8 @@ services:
   loki:
     image: grafana/loki:2.9.4
     container_name: loki
+    ports:
+      - "3100:3100"
     command: -config.file=/etc/loki/loki-config.yml
     volumes:
       - ./loki/loki-config.yml:/etc/loki/loki-config.yml
@@ -11,6 +13,8 @@ services:
   grafana:
     image: grafana/grafana:10.3.1
     container_name: grafana
+    ports:
+      - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
@@ -21,18 +25,6 @@ services:
       - ./grafana/provisioning/dashboards/json:/etc/grafana/provisioning/dashboards/json
     depends_on:
       - loki
-    restart: unless-stopped
-
-  nginx:
-    image: nginx:1.25
-    container_name: nginx
-    ports:
-      - "443:443"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/certs:/etc/nginx/certs
-    depends_on:
-      - grafana
     restart: unless-stopped
 
 volumes:
