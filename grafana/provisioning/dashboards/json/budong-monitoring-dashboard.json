@@ -1,0 +1,244 @@
+{
+  "title": "🏠 Budong 운영 & 개발 로그 대시보드 (검색 포함)",
+  "timezone": "Asia/Seoul",
+  "schemaVersion": 38,
+  "version": 2,
+  "refresh": "5s",
+  "style": "dark",
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "type": "custom",
+        "label": "Service",
+        "includeAll": true,
+        "multi": true,
+        "query": "budongbudong,chat,batch",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "level",
+        "type": "custom",
+        "label": "Level",
+        "includeAll": true,
+        "multi": true,
+        "query": "INFO,WARN,ERROR",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "keyword",
+        "type": "textbox",
+        "label": "Keyword",
+        "query": "",
+        "current": {
+          "text": "",
+          "value": ""
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "🟢 Main 서버 ERROR (5분)",
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#2ECC71",
+                "value": null
+              },
+              {
+                "color": "#F1C40F",
+                "value": 5
+              },
+              {
+                "color": "#E74C3C",
+                "value": 10
+              }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service=\"budongbudong\", level=\"ERROR\"}[5m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "🟢 Chat 서버 ERROR (5분)",
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#2ECC71",
+                "value": null
+              },
+              {
+                "color": "#F1C40F",
+                "value": 5
+              },
+              {
+                "color": "#E74C3C",
+                "value": 10
+              }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service=\"chat\", level=\"ERROR\"}[5m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "🟢 Batch 서버 ERROR (5분)",
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#2ECC71",
+                "value": null
+              },
+              {
+                "color": "#F1C40F",
+                "value": 5
+              },
+              {
+                "color": "#E74C3C",
+                "value": 10
+              }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service=\"batch\", level=\"ERROR\"}[5m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "📈 서비스별 ERROR 추이",
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "targets": [
+        {
+          "expr": "sum by (service) (rate({service=~\"$service\", level=\"ERROR\"}[1m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "🔍 로그 탐색 (Service / Level / Keyword)",
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "targets": [
+        {
+          "expr": "{service=~\"$service\", level=~\"$level\"} |= \"$keyword\"",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "🔥 최근 10분 ERROR Top Logger",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "topk(10, sum by (logger_name, service) (count_over_time({level=\"ERROR\"} | json [10m])))",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "Value": "발생 횟수",
+              "logger_name": "Logger",
+              "service": "Service"
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "발생 횟수"
+          }
+        ]
+      }
+    }
+
+  ]
+}
